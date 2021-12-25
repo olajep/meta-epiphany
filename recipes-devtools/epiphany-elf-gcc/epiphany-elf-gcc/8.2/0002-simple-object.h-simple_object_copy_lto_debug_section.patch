@@ -1,0 +1,65 @@
+From e062dc808950801a089ee6acd969393da2f39406 Mon Sep 17 00:00:00 2001
+From: Jan Hubicka <hubicka@ucw.cz>
+Date: Wed, 30 May 2018 19:57:50 +0200
+Subject: [PATCH] simple-object.h (simple_object_copy_lto_debug_sections): Add
+ rename parameter.
+
+	* simple-object.h (simple_object_copy_lto_debug_sections): Add rename
+	parameter.
+
+From-SVN: r260970
+---
+ include/ChangeLog       | 5 +++++
+ include/simple-object.h | 5 ++++-
+ libiberty/ChangeLog     | 2 --
+ 3 files changed, 9 insertions(+), 3 deletions(-)
+
+diff --git a/include/ChangeLog b/include/ChangeLog
+index 7b4aaed39c1..7a8022b67c0 100644
+--- a/include/ChangeLog
++++ b/include/ChangeLog
+@@ -1,3 +1,8 @@
++2018-05-30  Jan Hubicka  <hubicka@ucw.cz>
++
++	* simple-object.h (simple_object_copy_lto_debug_sections): Add rename
++	parameter.
++
+ 2019-02-22  Release Manager
+ 
+ 	* GCC 8.3.0 released.
+diff --git a/include/simple-object.h b/include/simple-object.h
+index db72f86de17..496d8cc107e 100644
+--- a/include/simple-object.h
++++ b/include/simple-object.h
+@@ -198,12 +198,15 @@ extern void
+ simple_object_release_write (simple_object_write *);
+ 
+ /* Copy LTO debug sections from SRC_OBJECT to DEST.
++   If RENAME is true, rename LTO debug section into debug section (i.e.
++   when producing final binary) and if it is false, keep the sections with
++   original names (when incrementally linking).
+    If an error occurs, return the errno value in ERR and an error string.  */
+ 
+ extern const char *
+ simple_object_copy_lto_debug_sections (simple_object_read *src_object,
+ 				       const char *dest,
+-				       int *err);
++				       int *err, int rename);
+ 
+ #ifdef __cplusplus
+ }
+diff --git a/libiberty/ChangeLog b/libiberty/ChangeLog
+index be3c6eea6dc..578da58181f 100644
+--- a/libiberty/ChangeLog
++++ b/libiberty/ChangeLog
+@@ -1,7 +1,5 @@
+ 2018-05-30  Jan Hubicka  <hubicka@ucw.cz>
+ 
+-	* simple-object.h (simple_object_copy_lto_debug_sections): Add rename
+-	parameter.
+ 	* simple-object.c (handle_lto_debug_sections): Add rename parameter.
+ 	(handle_lto_debug_sections_rename): New function.
+ 	(handle_lto_debug_sections_norename): New function.
+-- 
+2.31.1
+
