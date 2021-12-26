@@ -1,6 +1,8 @@
 inherit exotic-gcc-common
 
-PARALLEL_MAKE = ""
+# TODO: Actual version is 8.3
+
+#PARALLEL_MAKE = ""
 
 # Third digit in PV should be incremented after a minor release
 
@@ -10,7 +12,11 @@ PV = "8.2.0"
 
 BINV = "8.2.0"
 
-FILESEXTRAPATHS =. "${FILE_DIRNAME}/epiphany-elf-gcc/8.2:"
+#COREGCCDIR = "${COREBASE}/meta/recipes-devtools/gcc"
+COREGCCDIR = "${FILE_DIRNAME}/gcc-8.2"
+
+FILESEXTRAPATHS =. "${FILE_DIRNAME}/epiphany-elf-gcc/8.2:${COREGCCDIR}:"
+
 
 DEPENDS =+ "mpfr gmp libmpc zlib"
 NATIVEDEPS = "mpfr-native gmp-native libmpc-native zlib-native flex-native"
@@ -28,54 +34,64 @@ LIC_FILES_CHKSUM = "\
 EGCCBRANCH = "epiphany-gcc-8"
 SRC_URI = " git://github.com/adapteva/epiphany-gcc.git;branch=${EGCCBRANCH};name=${EGCCBRANCH} "
 
+# Patches for epiphany
 SRC_URI += " \
     file://0001-simple-object.h-simple_object_copy_lto_debug_section.patch \
     file://0002-simple-object.h-simple_object_copy_lto_debug_section.patch \
 "
 
-#    file://0001-gcc-4.3.1-ARCH_FLAGS_FOR_TARGET.patch \
-#    file://0002-uclibc-conf.patch \
-#    file://0003-gcc-uclibc-locale-ctype_touplow_t.patch \
-#    file://0004-uclibc-locale.patch \
-#    file://0005-uclibc-locale-no__x.patch \
-#    file://0006-uclibc-locale-wchar_fix.patch \
-#    file://0007-uclibc-locale-update.patch \
-#    file://0008-missing-execinfo_h.patch \
-#    file://0009-c99-snprintf.patch \
-#    file://0010-gcc-poison-system-directories.patch \
-#    file://0011-gcc-poison-dir-extend.patch \
-#    file://0012-gcc-4.3.3-SYSROOT_CFLAGS_FOR_TARGET.patch \
-#    file://0013-64-bit-multilib-hack.patch \
-#    file://0014-optional-libstdc.patch \
-#    file://0015-gcc-disable-MASK_RELAX_PIC_CALLS-bit.patch \
-#    file://0016-COLLECT_GCC_OPTIONS.patch \
-#    file://0017-Use-the-defaults.h-in-B-instead-of-S-and-t-oe-in-B.patch \
-#    file://0018-fortran-cross-compile-hack.patch \
-#    file://0019-libgcc-sjlj-check.patch \
-#    file://0020-cpp-honor-sysroot.patch \
-#    file://0021-MIPS64-Default-to-N64-ABI.patch \
-#    file://0022-Define-GLIBC_DYNAMIC_LINKER-and-UCLIBC_DYNAMIC_LINKE.patch \
-#    file://0023-gcc-Fix-argument-list-too-long-error.patch \
-#    file://0024-Disable-sdt.patch \
-#    file://0025-libtool.patch \
-#    file://0026-gcc-armv4-pass-fix-v4bx-to-linker-to-support-EABI.patch \
-#    file://0027-Use-the-multilib-config-files-from-B-instead-of-usin.patch \
-#    file://0028-Avoid-using-libdir-from-.la-which-usually-points-to-.patch \
-#    file://0029-export-CPP.patch \
-#    file://0030-Enable-SPE-AltiVec-generation-on-powepc-linux-target.patch \
-#    file://0031-Disable-the-MULTILIB_OSDIRNAMES-and-other-multilib-o.patch \
-#    file://0032-Ensure-target-gcc-headers-can-be-included.patch \
-#    file://0033-gcc-4.8-won-t-build-with-disable-dependency-tracking.patch \
-#    file://0034-Don-t-search-host-directory-during-relink-if-inst_pr.patch \
-#    file://0035-Dont-link-the-plugins-with-libgomp-explicitly.patch \
-#    file://0036-Use-SYSTEMLIBS_DIR-replacement-instead-of-hardcoding.patch \
-#    file://0037-pr65779.patch \
-#    file://0038-fix-g++-sysroot.patch \
-#    file://0039-libcc1-fix-libcc1-s-install-path-and-rpath.patch \
-#    file://0040-nativesdk-gcc-support.patch \
-#    file://0041-handle-target-sysroot-multilib.patch \
-#    file://0042-cxxflags-for-build.patch \
-#    "
+# Patches from core
+SRC_URI += "\
+    file://0001-gcc-4.3.1-ARCH_FLAGS_FOR_TARGET.patch \
+    file://0002-gcc-poison-system-directories.patch \
+    file://0003-gcc-4.3.3-SYSROOT_CFLAGS_FOR_TARGET.patch \
+    file://0004-64-bit-multilib-hack.patch \
+    file://0005-optional-libstdc.patch \
+    file://0006-gcc-disable-MASK_RELAX_PIC_CALLS-bit.patch \
+    file://0007-COLLECT_GCC_OPTIONS.patch \
+    file://0008-Use-the-defaults.h-in-B-instead-of-S-and-t-oe-in-B.patch \
+    file://0009-fortran-cross-compile-hack.patch \
+    file://0010-cpp-honor-sysroot.patch \
+    file://0011-MIPS64-Default-to-N64-ABI.patch \
+    file://0012-Define-GLIBC_DYNAMIC_LINKER-and-UCLIBC_DYNAMIC_LINKE.patch \
+    file://0013-gcc-Fix-argument-list-too-long-error.patch \
+    file://0014-Disable-sdt.patch \
+    file://0015-libtool.patch \
+    file://0016-gcc-armv4-pass-fix-v4bx-to-linker-to-support-EABI.patch \
+    file://0017-Use-the-multilib-config-files-from-B-instead-of-usin.patch \
+    file://0018-Avoid-using-libdir-from-.la-which-usually-points-to-.patch \
+    file://0019-export-CPP.patch \
+    file://0020-Disable-the-MULTILIB_OSDIRNAMES-and-other-multilib-o.patch \
+    file://0021-Ensure-target-gcc-headers-can-be-included.patch \
+    file://0022-gcc-4.8-won-t-build-with-disable-dependency-tracking.patch \
+    file://0023-Don-t-search-host-directory-during-relink-if-inst_pr.patch \
+    file://0024-Use-SYSTEMLIBS_DIR-replacement-instead-of-hardcoding.patch \
+    file://0025-aarch64-Add-support-for-musl-ldso.patch \
+    file://0026-libcc1-fix-libcc1-s-install-path-and-rpath.patch \
+    file://0027-handle-sysroot-support-for-nativesdk-gcc.patch \
+    file://0028-Search-target-sysroot-gcc-version-specific-dirs-with.patch \
+    file://0029-Fix-various-_FOR_BUILD-and-related-variables.patch \
+    file://0030-nios2-Define-MUSL_DYNAMIC_LINKER.patch \
+    file://0031-Add-ssp_nonshared-to-link-commandline-for-musl-targe.patch \
+    file://0032-libgcc-Add-knob-to-use-ldbl-128-on-ppc.patch \
+    file://0033-Link-libgcc-using-LDFLAGS-not-just-SHLIB_LDFLAGS.patch \
+    file://0034-libgcc_s-Use-alias-for-__cpu_indicator_init-instead-.patch \
+    file://0035-sync-gcc-stddef.h-with-musl.patch \
+    file://0036-fix-segmentation-fault-in-precompiled-header-generat.patch \
+    file://0037-Fix-for-testsuite-failure.patch \
+    file://0038-Re-introduce-spe-commandline-options.patch \
+    file://0039-riscv-Disable-multilib-for-OE.patch \
+    file://0040-powerpc-powerpc64-Add-support-for-musl-ldso.patch \
+    file://0041-Add-a-recursion-limit-to-libiberty-s-demangling-code.patch \
+    file://0042-PR-debug-86964.patch \
+    file://0043-PR85434-Prevent-spilling-of-stack-protector-guard-s-.patch \
+    file://CVE-2019-14250.patch \
+    file://CVE-2019-15847_p1.patch \
+    file://CVE-2019-15847_p2.patch \
+    file://CVE-2019-15847_p3.patch \
+"
+
+
 
 SRCREV = "171933c50a4db3671b56272e4b034b0a06f2d6d4"
 
