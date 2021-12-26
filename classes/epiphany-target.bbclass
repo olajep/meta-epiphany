@@ -1,0 +1,8 @@
+TARGET_ARCH = "epiphany"
+TARGET_OS = "elf"
+TARGET_VENDOR = ""
+#TARGET_SYS = "${target_arch}${target_vendor}-${target_os}"
+#TARGET_PREFIX = "${TARGET_SYS}-"
+TARGET_CC_ARCH = ""
+TARGET_LD_ARCH = ""
+TARGET_AS_ARCH = ""
