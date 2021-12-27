@@ -6,7 +6,8 @@ inherit epiphany-library
 require recipes-devtools/gcc/gcc-${PV}.inc
 require recipes-devtools/gcc/gcc-runtime.inc
 
-DEPENDS += "${TARGET_SYS}-${EPIPHANY_LIBC}"
+DEPENDS_class-target += "${TARGET_SYS}-${EPIPHANY_LIBC}"
+PROVIDES := "virtual/${TARGET_PREFIX}compilerlibs"
 
 TOOLCHAIN_OPTIONS = " -isystem ${STAGING_DIR_HOST}${prefix}/${TARGET_SYS}/include"
 
