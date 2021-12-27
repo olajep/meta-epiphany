@@ -1,0 +1,40 @@
+From 718631d0a73da63803805bdab77c4ee4a866f995 Mon Sep 17 00:00:00 2001
+From: Joern Rennecke <joern.rennecke@embecosm.com>
+Date: Thu, 8 Aug 2013 19:48:53 +0100
+Subject: [PATCH 11/33] * config/epiphany/epiphany.c
+ (epiphany_expand_epilogue): Avoid unsigned calculation for frame_adjust.
+
+---
+ gcc/ChangeLog.epiphany         | 5 +++++
+ gcc/config/epiphany/epiphany.c | 2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index a708981a6cb..8093a4519d1 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -1,3 +1,8 @@
++2013-08-08  Joern Rennecke <joern.rennecke@embecosm.com>
++
++	* config/epiphany/epiphany.c (epiphany_expand_epilogue): Avoid
++	unsigned calculation for frame_adjust.
++
+ 2013-08-13  Joern Rennecke <joern.rennecke@embecosm.com>
+ 
+ 	* config/epiphany/predicates.md (pcrel_operand): New predicate.
+diff --git a/gcc/config/epiphany/epiphany.c b/gcc/config/epiphany/epiphany.c
+index 590e1e6e416..85409a9acb9 100644
+--- a/gcc/config/epiphany/epiphany.c
++++ b/gcc/config/epiphany/epiphany.c
+@@ -2019,7 +2019,7 @@ epiphany_expand_epilogue (int sibcall_p)
+       long frame_adjust
+ 	= (current_frame_info.sft_hd_frame_offset
+ 	   - (current_frame_info.first_slot_offset
+-	      - current_frame_info.reg_size));
++	      - (signed long) current_frame_info.reg_size));
+       mem = gen_frame_mem (BLKmode, stack_pointer_rtx);
+       if (frame_adjust)
+ 	emit_insn (gen_stack_adjust_addfp (GEN_INT (frame_adjust), mem));
+-- 
+2.31.1
+

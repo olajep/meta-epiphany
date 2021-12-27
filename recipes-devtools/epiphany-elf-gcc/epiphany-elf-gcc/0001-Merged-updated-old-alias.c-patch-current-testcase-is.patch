@@ -1,0 +1,68 @@
+From d5c1a4b84667bf727acd612de1a0f162b39dc014 Mon Sep 17 00:00:00 2001
+From: Joern Rennecke <joern.rennecke@embecosm.com>
+Date: Tue, 24 Jan 2012 17:59:58 +0000
+Subject: [PATCH 01/33] Merged / updated old alias.c patch; current testcase is
+ gcc.dg/torture/stackalign/vararg-1.c -O2 (and higher optimization levels,
+ too).
+
+(orig date 2009-09-23)
+2013-07-30  Joern Rennecke <joern.rennecke@embecosm.com>
+
+        * alias.c (base_alias_check): Allow for aliases between stack-
+        and frame-pointer referenced memory.
+
+git-svn-id: svn+ssh://thomas.embecosm.com/embecosm/Customer-Projects/adapteva/branches/epiphany-20120120@2349 8ad889b4-764b-0410-b193-d8a7b30fb157
+
+Conflicts:
+	gcc/ChangeLog.epiphany
+	gcc/alias.c
+---
+ gcc/ChangeLog.epiphany |  5 +++++
+ gcc/alias.c            | 12 ++++++++++++
+ 2 files changed, 17 insertions(+)
+ create mode 100644 gcc/ChangeLog.epiphany
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+new file mode 100644
+index 00000000000..62f8185672c
+--- /dev/null
++++ b/gcc/ChangeLog.epiphany
+@@ -0,0 +1,5 @@
++2013-07-30  Joern Rennecke <joern.rennecke@embecosm.com>
++
++	* alias.c (base_alias_check): Allow for aliases between stack-
++	and frame-pointer referenced memory.
++
+diff --git a/gcc/alias.c b/gcc/alias.c
+index 49bd7b37966..691dfb1ef3c 100644
+--- a/gcc/alias.c
++++ b/gcc/alias.c
+@@ -207,6 +207,7 @@ static struct {
+ 	Each of these rtxes has a separate ADDRESS associated with it,
+ 	each with a negative id.
+ 
++	Before register elimination / prologue/epilogue generation,
+ 	GCC is (and is required to be) precise in which register it
+ 	chooses to access a particular region of stack.  We can therefore
+ 	assume that accesses based on one of these rtxes do not alias
+@@ -2295,6 +2296,17 @@ base_alias_check (rtx x, rtx x_base, rtx y, rtx y_base,
+   if (GET_CODE (x_base) != ADDRESS && GET_CODE (y_base) != ADDRESS)
+     return 0;
+ 
++  /* If both are stack references, one via the stack pointer, the other via
++     the frame pointer, there can be an alias.
++     E.g.: gcc.c-torture/execute/20041113-1.c -O3 -g,
++           gcc.dg/torture/stackalign/vararg-1.c  -O2  */
++  if (reload_completed
++      && (x_base == static_reg_base_value[STACK_POINTER_REGNUM]
++	  || x_base == static_reg_base_value[HARD_FRAME_POINTER_REGNUM])
++      && (y_base == static_reg_base_value[STACK_POINTER_REGNUM]
++	  || y_base == static_reg_base_value[HARD_FRAME_POINTER_REGNUM]))
++    return 1;
++
+   if (unique_base_value_p (x_base) || unique_base_value_p (y_base))
+     return 0;
+ 
+-- 
+2.31.1
+

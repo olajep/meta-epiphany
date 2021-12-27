@@ -1,0 +1,488 @@
+From 42e6cd9cccbb4eef320144aa416a6ff730009715 Mon Sep 17 00:00:00 2001
+From: Joern Rennecke <joern.rennecke@embecosm.com>
+Date: Thu, 1 Aug 2013 17:06:19 +0100
+Subject: [PATCH 06/33] epiphany: Use need_trace instead of TRACE_REGNUM
+
+gcc/
+	Backout these changes:
+	* config/epiphany/epiphany.h (FIRST_PSEUDO_REGISTER): Bump up to 79.
+	(FIXED_REGISTERS, CALL_USED_REGISTERS): Include TRACE_REGNUM entry.
+	(REG_ALLOC_ORDER, REGISTER_NAMES): Likewise.
+	(REG_CLASS_CONTEENTS) <ALL_REGS>: Likewise.
+	* config/epiphany/epiphany.md (TRACE_REGNUM): New constant.
+	(sibcall, sibcall_i): Add use of trace.
+	(sibcall_value, sibcall_value_i): Likewise.
+	* config/epiphany/epiphany.c (epiphany_initial_elimination_offset):
+	Define elimination from TRACE_REGNUM.
+	(epiphany_can_eliminate): Only restrict elimination from
+	TRACE_REGNUM.
+
+	* config/epiphany/epiphany-protos.h (epiphany_need_fp): Declare.
+	* config/epiphany/epiphany.c (struct epiphany_frame_info):
+	Change need_fp to bool.
+	New member need_trace.
+	(epiphany_compute_frame_size): Set / use need_trace member.
+	Avoid GPR_LR in last_slot.
+	(piphany_initial_elimination_offset): Handle elimination of
+	HARD_FRAME_POINTER_REGNUM.
+	(epiphany_can_eliminate): Likewise.
+	* config/epiphany/epiphany.h (machine_function): Add member
+	expanded_non_sibcall.
+	(ELIMINABLE_REGS): Add entry for HARD_FRAME_POINTER_REGNUM.
+	* config/epiphany/epiphany.md (reload_insi_ra): Use epiphany_need_fp.
+	(call_i, call_value_i): Use (mem:BLK (reg:SI GPR_FP)) instead
+	of TRACE_REGNUM.
+	(call, call_value): Likewise.
+	Set MACHINE_FUNCTION (cfun)->expanded_non_sibcall.
+	* config/epiphany/predicates.md (trace_operand): Check for MEM.
+
+Reworded-by: Ola Jeppsson <ola.jeppsson@gmail.com>
+---
+ gcc/ChangeLog.epiphany                | 32 +++++++++++++
+ gcc/config/epiphany/epiphany-protos.h |  2 +-
+ gcc/config/epiphany/epiphany.c        | 65 ++++++++++++++++-----------
+ gcc/config/epiphany/epiphany.h        | 13 +++---
+ gcc/config/epiphany/epiphany.md       | 54 +++++++++++-----------
+ gcc/config/epiphany/predicates.md     |  3 +-
+ 6 files changed, 108 insertions(+), 61 deletions(-)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index 73ca6042d6c..b7970c9544d 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -23,6 +23,38 @@
+ 	(epiphany_can_eliminate): Only restrict elimination from
+ 	TRACE_REGNUM.
+ 
++	Backout these changes:
++	* config/epiphany/epiphany.h (FIRST_PSEUDO_REGISTER): Bump up to 79.
++	(FIXED_REGISTERS, CALL_USED_REGISTERS): Include TRACE_REGNUM entry.
++	(REG_ALLOC_ORDER, REGISTER_NAMES): Likewise.
++	(REG_CLASS_CONTEENTS) <ALL_REGS>: Likewise.
++	* config/epiphany/epiphany.md (TRACE_REGNUM): New constant.
++	(sibcall, sibcall_i): Add use of trace.
++	(sibcall_value, sibcall_value_i): Likewise.
++	* config/epiphany/epiphany.c (epiphany_initial_elimination_offset):
++	Define elimination from TRACE_REGNUM.
++	(epiphany_can_eliminate): Only restrict elimination from
++	TRACE_REGNUM.
++
++	* config/epiphany/epiphany-protos.h (epiphany_need_fp): Declare.
++	* config/epiphany/epiphany.c (struct epiphany_frame_info):
++	Change need_fp to bool.
++	New member need_trace.
++	(epiphany_compute_frame_size): Set / use need_trace member.
++	Avoid GPR_LR in last_slot.
++	(piphany_initial_elimination_offset): Handle elimination of
++	HARD_FRAME_POINTER_REGNUM.
++	(epiphany_can_eliminate): Likewise.
++	* config/epiphany/epiphany.h (machine_function): Add member
++	expanded_non_sibcall.
++	(ELIMINABLE_REGS): Add entry for HARD_FRAME_POINTER_REGNUM.
++	* config/epiphany/epiphany.md (reload_insi_ra): Use epiphany_need_fp.
++	(call_i, call_value_i): Use (mem:BLK (reg:SI GPR_FP)) instead
++	of TRACE_REGNUM.
++	(call, call_value): Likewise.
++	Set MACHINE_FUNCTION (cfun)->expanded_non_sibcall.
++	* config/epiphany/predicates.md (trace_operand): Check for MEM.
++
+ 2013-07-31  Joern Rennecke <joern.rennecke@embecosm.com>
+ 
+ 	Overlay (-fpic) support:
+diff --git a/gcc/config/epiphany/epiphany-protos.h b/gcc/config/epiphany/epiphany-protos.h
+index 1d05b098635..2bab8bc12fb 100644
+--- a/gcc/config/epiphany/epiphany-protos.h
++++ b/gcc/config/epiphany/epiphany-protos.h
+@@ -59,4 +59,4 @@ extern bool epiphany_regno_rename_ok (unsigned src, unsigned dst);
+    PR other/55523: gencondmd file includes / dependencies are messed up,
+    it uses peephole2 predicates without having all the necessary headers.  */
+ extern int get_attr_sched_use_fpu (rtx_insn *);
+-
++extern bool epiphany_need_fp (void);
+diff --git a/gcc/config/epiphany/epiphany.c b/gcc/config/epiphany/epiphany.c
+index c88f2365cfe..45d088a9965 100644
+--- a/gcc/config/epiphany/epiphany.c
++++ b/gcc/config/epiphany/epiphany.c
+@@ -975,15 +975,15 @@ struct epiphany_frame_info
+   HARD_REG_SET gmask;		/* Set of saved gp registers.  */
+   bool		initialized;	/* True if frame size already calculated.  */
+   bool frame_offset_known;
++  /* Indicate if we need the hard frame pointer, pointing to a suitable frame,
++     for overlay runtime backtrace purposes.  */
++  bool need_trace;
++  /* NEED_FP is set when we need we need a hard frame pointer either
++     as determined by the middle-end by frame_pointer_needed, or as
++     above with NEED_TRACE.  */
++  bool      need_fp;
+   int      stld_sz;             /* Current load/store data size for offset
+ 				   adjustment. */
+-  /* frame_pointer_needed indicates if the middle-end knows that a frame
+-     pointer is needed.  NEED_FP will be set in that case, but also
+-     when we need a frame pointer purely for overlay runtime backtrace
+-     purposes.  In the latter case, we don't want the middle-end to
+-     comletely stop frame pointer elimination, since stack offsets are
+-     sometimes smaller.  */
+-  int      need_fp;
+   /* FIRST_SLOT is the slot that is saved first, at the very start of
+      the frame, with a POST_MODIFY to allocate the frame, if the size fits,
+      or at least the parm and register save areas, otherwise.
+@@ -1159,15 +1159,22 @@ epiphany_compute_frame_size (int size /* # of var. bytes allocated.  */)
+ 
+   /* We can't just rely on frame_pointer_needed here to pick up overlay
+      requirements because we are also called from
+-     epiphany_initial_elimination_offset.  */
+-  if (frame_pointer_needed || (flag_pic && !crtl->is_leaf))
+-    {
+-      current_frame_info.need_fp = 1;
++     epiphany_initial_elimination_offset.
++     Note also that if a function ends in a sibcall but makes no other call
++     (disregarding sfuncs), it is not considered a leaf function, but
++     it doesn't need to create a overlay ABI frame for the benefit of
++     a callee.  */
++  current_frame_info.need_trace
++    = (flag_pic && !crtl->is_leaf
++       && MACHINE_FUNCTION (cfun)->expanded_non_sibcall);
++  if (frame_pointer_needed || current_frame_info.need_trace)
++    {
++      current_frame_info.need_fp = true;
+       if (!interrupt_p && !pretend_size)
+ 	first_slot = GPR_FP;
+     }
+   else
+-    current_frame_info.need_fp = 0;
++    current_frame_info.need_fp = false;
+   for (regno = 0; regno <= GPR_LAST; regno++)
+     {
+       if (MUST_SAVE_REGISTER (regno, interrupt_p))
+@@ -1187,6 +1194,9 @@ epiphany_compute_frame_size (int size /* # of var. bytes allocated.  */)
+ 	    first_slot = regno;
+ 	  else if (last_slot < 0
+ 		   && (first_slot ^ regno) != 1
++		   /* Could handle GPR_{LR,FP} in last_slot too... but that'd
++		      need more complex code in expand_prologue.  */
++		   && (!current_frame_info.need_trace || (regno ^ GPR_LR) > 1)
+ 		   && (!interrupt_p || regno > GPR_1))
+ 	    last_slot = regno;
+ 	}
+@@ -1316,7 +1326,7 @@ epiphany_compute_frame_size (int size /* # of var. bytes allocated.  */)
+      we still need the hard frame pointer to point there for non-leaf
+      functions, so if we don't know the location yet, emit
+      prologue / eiplogue to find out.  */
+-  if (flag_pic && !crtl->is_leaf && !current_frame_info.frame_offset_known)
++  if (current_frame_info.need_trace && !current_frame_info.frame_offset_known)
+     {
+       /* Pretend it's initialized for now so that we can expand the prologue
+ 	 without further recursion.  */
+@@ -2075,6 +2085,9 @@ epiphany_initial_elimination_offset (int from, int to)
+     return current_frame_info.total_size - current_frame_info.reg_size;
+   if (from == FRAME_POINTER_REGNUM && to == HARD_FRAME_POINTER_REGNUM)
+     return current_frame_info.sft_hd_frame_offset;
++  if (from ==  HARD_FRAME_POINTER_REGNUM && to == STACK_POINTER_REGNUM)
++    return (current_frame_info.total_size - current_frame_info.reg_size
++	    - current_frame_info.sft_hd_frame_offset);
+   if (from == ARG_POINTER_REGNUM && to == STACK_POINTER_REGNUM)
+     return (current_frame_info.total_size
+ 	    - ((current_frame_info.pretend_size + 4) & -8));
+@@ -2082,9 +2095,6 @@ epiphany_initial_elimination_offset (int from, int to)
+     return (current_frame_info.reg_size
+ 	    - ((current_frame_info.pretend_size + 4) & -8)
+ 	    + current_frame_info.sft_hd_frame_offset);
+-  if (from == TRACE_REGNUM
+-      && (to == HARD_FRAME_POINTER_REGNUM || to == STACK_POINTER_REGNUM))
+-    return 0;
+   gcc_unreachable ();
+ }
+ 
+@@ -3158,16 +3168,19 @@ epiphany_can_eliminate (const int from, const int to)
+ {
+   /* When compiling for overlays, we require a frame pointer in all non-leaf
+      functions so that the runtime can easily find all active functions.
+-     We still want to eliminate the frame pointer in memory accesses
+-     wherever possible, to make use of shorter instruction encodings;
+-     OTOH, the hard frame pointer must be always present, even if there
+-     was no memory frame reference in this function.  For this reason,
+-     we have (use TRACE_REGNUM) in every call insns, to show that the
+-     call or callee might use the backtrace; in the pic case, this can be
+-     eliminated to the hard frame pointer only.  */
+-  return (from != TRACE_REGNUM
+-	  || to == (flag_pic && !crtl->is_leaf
+-		    ? HARD_FRAME_POINTER_REGNUM : STACK_POINTER_REGNUM));
++     For this reason we put the hard frame pointer in the eliminable
++     regs and deny the elimination in the pic case to make the
++     hard frame pointer unavailable for register allocation.  */
++  if (from == HARD_FRAME_POINTER_REGNUM)
++    return (!flag_pic || crtl->is_leaf
++	    || !MACHINE_FUNCTION (cfun)->expanded_non_sibcall);
++  return true;
++}
++
++bool
++epiphany_need_fp (void)
++{
++  return current_frame_info.need_fp;
+ }
+ 
+ struct gcc_target targetm = TARGET_INITIALIZER;
+diff --git a/gcc/config/epiphany/epiphany.h b/gcc/config/epiphany/epiphany.h
+index 820d279c540..b3b8e6d327a 100644
+--- a/gcc/config/epiphany/epiphany.h
++++ b/gcc/config/epiphany/epiphany.h
+@@ -210,7 +210,7 @@ along with GCC; see the file COPYING3.  If not see
+    All registers that the compiler knows about must be given numbers,
+    even those that are not normally considered general registers.  */
+ 
+-#define FIRST_PSEUDO_REGISTER 79
++#define FIRST_PSEUDO_REGISTER 78
+ 
+ 
+ /* General purpose registers.  */
+@@ -245,7 +245,6 @@ along with GCC; see the file COPYING3.  If not see
+ 	1, 1, 1, 1, 1, 1,               /* Core Control Registers.  */  \
+ 	1, 1, 1,			/* FP_{NEAREST,...}_REGNUM */\
+ 	1,				/* UNKNOWN_REGNUM - placeholder.  */\
+-	1,				/* TRACE_REGNUM.  */\
+ }
+ 
+ /* Like `FIXED_REGISTERS' but has 1 for each register that is clobbered (in
+@@ -274,7 +273,6 @@ along with GCC; see the file COPYING3.  If not see
+ 	1, 1, 1, 1, 1, 1,               /* Core Control Registers.  */  \
+ 	1, 1, 1,			/* FP_{NEAREST,...}_REGNUM */\
+ 	1,				/* UNKNOWN_REGNUM - placeholder.  */\
+-	1,				/* TRACE_REGNUM.  */\
+ }
+ 
+ #define REG_ALLOC_ORDER \
+@@ -293,7 +291,7 @@ along with GCC; see the file COPYING3.  If not see
+     14, 13, /* Link register, stack pointer.  */ \
+     /* Can't allocate, but must name these... */ \
+     28, 29, 30, 31, \
+-    64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78 \
++    64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77 \
+   }
+ 
+ #define HARD_REGNO_RENAME_OK(SRC, DST) epiphany_regno_rename_ok (SRC, DST)
+@@ -360,7 +358,7 @@ enum reg_class {
+   { 0xffff100f,0xffffff00,0x0},  /* SIBCALL_REGS */			\
+   { 0xffffffff,0xffffffff,0x0003}, /* GENERAL_REGS */			\
+   { 0x00000000,0x00000000,0x03f0}, /* CORE_CONTROL_REGS */		\
+-  { 0xffffffff,0xffffffff,0x7fff}, /* ALL_REGS */				\
++  { 0xffffffff,0xffffffff,0x3fff}, /* ALL_REGS */				\
+ }
+ 
+ 
+@@ -425,6 +423,7 @@ typedef struct GTY (()) machine_function
+   unsigned lr_clobbered : 1;
+   unsigned control_use_inserted : 1;
+   unsigned lr_slot_known : 1;
++  unsigned expanded_non_sibcall : 1;
+   unsigned sw_entities_processed : 6;
+   long lr_slot_offset;
+   rtx and_mask;
+@@ -479,7 +478,7 @@ typedef struct GTY (()) machine_function
+ #define ELIMINABLE_REGS						\
+ {{ FRAME_POINTER_REGNUM, STACK_POINTER_REGNUM},			\
+  { FRAME_POINTER_REGNUM, HARD_FRAME_POINTER_REGNUM},		\
+- { TRACE_REGNUM, HARD_FRAME_POINTER_REGNUM},		\
++ { HARD_FRAME_POINTER_REGNUM, STACK_POINTER_REGNUM},		\
+  { ARG_POINTER_REGNUM, STACK_POINTER_REGNUM},                   \
+  { ARG_POINTER_REGNUM, HARD_FRAME_POINTER_REGNUM},		\
+ }
+@@ -725,7 +724,7 @@ typedef struct GTY (()) machine_function
+   "r56", "r57", "r58", "r59", "r60", "r61", "r62", "r63",	\
+   "ap",  "sfp", "cc1", "cc2",					\
+   "config", "status", "lc", "ls", "le", "iret",			\
+-  "fp_near", "fp_trunc", "fp_anyfp", "unknown", "trace"		\
++  "fp_near", "fp_trunc", "fp_anyfp", "unknown"			\
+ }
+ 
+ #define FINAL_PRESCAN_INSN(INSN, OPVEC, NOPERANDS) \
+diff --git a/gcc/config/epiphany/epiphany.md b/gcc/config/epiphany/epiphany.md
+index c90f65790a3..6f7e8614918 100644
+--- a/gcc/config/epiphany/epiphany.md
++++ b/gcc/config/epiphany/epiphany.md
+@@ -44,7 +44,6 @@
+    (FP_TRUNCATE_REGNUM		75)
+    (FP_ANYFP_REGNUM		76)
+    (UNKNOWN_REGNUM		77) ; used for addsi3_r and friends
+-   (TRACE_REGNUM		78) ; placeholder for GPR_FP use in calls
+    ; We represent the return address as an unspec rather than a reg.
+    ; If we used a reg, we could use register elimination, but eliminating
+    ; to GPR_LR would make the latter visible to dataflow, thus making it
+@@ -264,7 +263,7 @@
+   ""
+ {
+   rtx addr
+-    = (frame_pointer_needed ? hard_frame_pointer_rtx : stack_pointer_rtx);
++    = (epiphany_need_fp () ? hard_frame_pointer_rtx : stack_pointer_rtx);
+ 
+   if (!MACHINE_FUNCTION (cfun)->lr_slot_known)
+     {
+@@ -2171,17 +2170,28 @@
+   [(set_attr "type" "uncond_branch")])
+ 
+ 
++/* For the overlay ABI, calls need to build a readily parsable frame
++   for the benefit of callees (or the intercepting runtime on its behalf,
++   or of it callees);
++   that does not apply to sibcalls, which get satisfied by being handed
++   the sibcaller's caller GRP_SP / GPR_FP.
++   For this reason, we set a flag when we expand a non-sibcall, so that
++   we can tell at register allocation time.
++   We also put in an explicit use of the memory pointed to by the hard frame
++   pointer, so that the frame pointer setting insn is not optimized away.  */
+ (define_expand "call"
+   ;; operands[1] is stack_size_rtx
+   ;; operands[2] is next_arg_register
+   [(parallel [(call (match_operand:SI 0 "call_operand" "")
+ 		    (match_operand 1 "" ""))
+-	      (use (reg:SI TRACE_REGNUM))
++	      (use (mem:BLK (reg:SI GPR_FP)))
+ 	      (clobber (reg:SI GPR_LR))])]
+   ""
+ {
+   bool target_uninterruptible = epiphany_call_uninterruptible_p (operands[0]);
+ 
++  MACHINE_FUNCTION (cfun)->expanded_non_sibcall = 1;
++
+   if (!call_operand (operands[1], VOIDmode))
+     operands[0]
+       = change_address (operands[0], VOIDmode,
+@@ -2194,8 +2204,8 @@
+ 	(gen_rtx_PARALLEL
+ 	  (VOIDmode,
+ 	   gen_rtvec (3, gen_rtx_CALL (VOIDmode, operands[0], operands[1]),
+-			 gen_rtx_USE (VOIDmode,
+-				      gen_rtx_REG (SImode, TRACE_REGNUM)),
++			 gen_rtx_USE (VOIDmode, gen_rtx_MEM (BLKmode,
++				      hard_frame_pointer_rtx)),
+ 			 gen_rtx_CLOBBER (VOIDmode,
+ 					  gen_rtx_REG (SImode, GPR_LR)))));
+       emit_insn (target_uninterruptible ? gen_gie (): gen_gid ());
+@@ -2207,7 +2217,7 @@
+   [(match_parallel 2 "float_operation"
+      [(call (mem:SI (match_operand:SI 0 "call_address_operand" "Csy,r"))
+ 	    (match_operand 1 "" ""))
+-      (use (match_operand:SI 3 "trace_operand" ""))
++      (use (match_operand:BLK 3 "trace_operand" ""))
+       (clobber (reg:SI GPR_LR))])]
+   ""
+   "%f0"
+@@ -2218,7 +2228,6 @@
+   ;; operands[2] is next_arg_register
+   [(parallel [(call (match_operand:SI 0 "call_operand" "")
+ 		    (match_operand 1 "" ""))
+-	      (use (reg:SI TRACE_REGNUM))
+ 	      (return)])]
+   ""
+ {
+@@ -2235,9 +2244,7 @@
+       emit_call_insn
+ 	(gen_rtx_PARALLEL
+ 	  (VOIDmode,
+-	   gen_rtvec (3, gen_rtx_CALL (VOIDmode, operands[0], operands[1]),
+-			 gen_rtx_USE (VOIDmode,
+-				      gen_rtx_REG (SImode, TRACE_REGNUM)),
++	   gen_rtvec (2, gen_rtx_CALL (VOIDmode, operands[0], operands[1]),
+ 			 ret_rtx)));
+       emit_insn (target_uninterruptible ? gen_gie (): gen_gid ());
+       DONE;
+@@ -2247,7 +2254,6 @@
+ (define_insn "*sibcall_i"
+   [(call (mem:SI (match_operand:SI 0 "call_address_operand" "Csy,Rsc"))
+ 	 (match_operand 1 "" ""))
+-   (use (match_operand:SI 2 "trace_operand" ""))
+    (return)]
+   ""
+   "@
+@@ -2261,12 +2267,14 @@
+   [(parallel [(set (match_operand 0 "gpr_operand" "=r")
+ 		   (call (match_operand:SI 1 "call_operand" "")
+ 			 (match_operand 2 "" "")))
+-	      (use (reg:SI TRACE_REGNUM))
++	      (use (mem:BLK (reg:SI GPR_FP)))
+ 	      (clobber (reg:SI GPR_LR))])]
+   ""
+ {
+   bool target_uninterruptible = epiphany_call_uninterruptible_p (operands[1]);
+ 
++  MACHINE_FUNCTION (cfun)->expanded_non_sibcall = 1;
++
+   if (!call_operand (operands[1], VOIDmode))
+     operands[1]
+       = change_address (operands[1], VOIDmode,
+@@ -2278,13 +2286,13 @@
+       emit_call_insn
+ 	(gen_rtx_PARALLEL
+ 	  (VOIDmode,
+-	   gen_rtvec (3, gen_rtx_SET
+-			   (operands[0],
+-			    gen_rtx_CALL (VOIDmode, operands[1], operands[2])),
+-			 gen_rtx_USE (VOIDmode,
+-				      gen_rtx_REG (SImode, TRACE_REGNUM)),
+-			 gen_rtx_CLOBBER (VOIDmode,
+-					  gen_rtx_REG (SImode, GPR_LR)))));
++	   gen_rtvec
++	    (3,
++	     gen_rtx_SET (operands[0],
++			  gen_rtx_CALL (VOIDmode, operands[1], operands[2])),
++	     gen_rtx_USE (VOIDmode, gen_rtx_MEM (BLKmode,
++			  hard_frame_pointer_rtx)),
++	     gen_rtx_CLOBBER (VOIDmode, gen_rtx_REG (SImode, GPR_LR)))));
+       emit_insn (target_uninterruptible ? gen_gie (): gen_gid ());
+       DONE;
+     }
+@@ -2295,7 +2303,7 @@
+      [(set (match_operand 0 "gpr_operand" "=r,r")
+ 	   (call (mem:SI (match_operand:SI 1 "call_address_operand" "Csy,r"))
+ 	         (match_operand 2 "" "")))
+-      (use (match_operand:SI 4 "trace_operand" ""))
++      (use (match_operand:BLK 4 "trace_operand" ""))
+       (clobber (reg:SI GPR_LR))])]
+   ""
+   "%f1"
+@@ -2308,7 +2316,6 @@
+   [(parallel [(set (match_operand 0 "gpr_operand" "=r")
+ 		   (call (match_operand:SI 1 "call_operand" "")
+ 			 (match_operand 2 "" "")))
+-	      (use (reg:SI TRACE_REGNUM))
+ 	      (return)])]
+   ""
+ {
+@@ -2325,11 +2332,9 @@
+       emit_call_insn
+ 	(gen_rtx_PARALLEL
+ 	  (VOIDmode,
+-	   gen_rtvec (3, gen_rtx_SET
++	   gen_rtvec (2, gen_rtx_SET
+ 			   (operands[0],
+ 			    gen_rtx_CALL (VOIDmode, operands[1], operands[2])),
+-			 gen_rtx_USE (VOIDmode,
+-				      gen_rtx_REG (SImode, TRACE_REGNUM)),
+ 			 ret_rtx)));
+       emit_insn (target_uninterruptible ? gen_gie (): gen_gid ());
+       DONE;
+@@ -2340,7 +2345,6 @@
+   [(set (match_operand 0 "gpr_operand" "=r,r")
+ 	(call (mem:SI (match_operand:SI 1 "call_address_operand" "Csy,Rsc"))
+ 	      (match_operand 2 "" "")))
+-   (use (match_operand:SI 3 "trace_operand" ""))
+    (return)]
+   ""
+   "@
+diff --git a/gcc/config/epiphany/predicates.md b/gcc/config/epiphany/predicates.md
+index 6c5a278ccb3..6eb135cbd19 100644
+--- a/gcc/config/epiphany/predicates.md
++++ b/gcc/config/epiphany/predicates.md
+@@ -55,8 +55,7 @@
+ })
+ 
+ (define_predicate "trace_operand"
+-  (and (match_code "reg")
+-       (match_test "REGNO (op) == TRACE_REGNUM || REGNO (op) == GPR_SP || REGNO (op) == GPR_FP")))
++  (match_code "mem"))
+ 
+ ;; general purpose register.
+ (define_predicate "gpr_operand"
+-- 
+2.31.1
+

@@ -1,0 +1,54 @@
+From 762bd7d3a7532a571ce27e518fefb1fa3f108a93 Mon Sep 17 00:00:00 2001
+From: Joern Rennecke <joern.rennecke@embecosm.com>
+Date: Fri, 31 Oct 2014 13:15:03 +0000
+Subject: [PATCH 17/33] * config/epiphany/epiphany.md (stack_adjust_addfp,
+ stack_adjust_mov): Don't hard code frame pointer name, but find it from
+ reg_names.
+
+---
+ gcc/ChangeLog.epiphany          |  5 +++++
+ gcc/config/epiphany/epiphany.md | 10 ++++++++--
+ 2 files changed, 13 insertions(+), 2 deletions(-)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index 572b6af3a67..d9be8347ba2 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -1,3 +1,8 @@
++2013-10-31  Joern Rennecke <joern.rennecke@embecosm.com>
++
++	* config/epiphany/epiphany.md (stack_adjust_addfp, stack_adjust_mov):
++	Don't hard code frame pointer name, but find it from reg_names.
++
+ 2014-09-25  Simon Cook  <simon.cook@embecosm.com>
+ 
+ 	* config/epiphany/epiphany.h (EPIPHANY_LIBRARY_EXTRA_SPEC): Don't
+diff --git a/gcc/config/epiphany/epiphany.md b/gcc/config/epiphany/epiphany.md
+index 764e2bb7033..5fe0c0d0474 100644
+--- a/gcc/config/epiphany/epiphany.md
++++ b/gcc/config/epiphany/epiphany.md
+@@ -2549,13 +2549,19 @@
+    (clobber (reg:SI STATUS_REGNUM))
+    (clobber (match_operand:BLK 1 "memory_operand" "=m"))]
+   "reload_completed"
+-  "add sp,r15,%0")
++{
++  rtx xop[2];
++  xop[0] = operands[0];
++  xop[1] = hard_frame_pointer_rtx;
++  output_asm_insn ("add sp,%1,%0", xop);
++  return "";
++})
+ 
+ (define_insn "stack_adjust_mov"
+   [(set (reg:SI GPR_SP) (reg:SI GPR_FP))
+    (clobber (match_operand:BLK 0 "memory_operand" "=m"))]
+   "reload_completed"
+-  "mov sp,r15"
++  { asm_fprintf (asm_out_file, "\tmov sp,%s\n", reg_names[GPR_FP]); return ""; }
+   [(set_attr "type" "move")])
+ 
+ (define_insn "stack_adjust_str"
+-- 
+2.31.1
+

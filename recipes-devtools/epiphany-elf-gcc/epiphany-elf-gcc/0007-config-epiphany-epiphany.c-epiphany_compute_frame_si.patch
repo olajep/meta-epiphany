@@ -1,0 +1,52 @@
+From aea1bb52ab311db4743a4b4eb08adbe5fe641373 Mon Sep 17 00:00:00 2001
+From: Joern Rennecke <joern.rennecke@embecosm.com>
+Date: Fri, 2 Aug 2013 02:17:43 +0100
+Subject: [PATCH 07/33] * config/epiphany/epiphany.c
+ (epiphany_compute_frame_size): Move call to set_lr_slot_offset after the bulk
+ of current_frame_info member initializations.
+
+---
+ gcc/ChangeLog.epiphany         | 6 ++++++
+ gcc/config/epiphany/epiphany.c | 5 +++--
+ 2 files changed, 9 insertions(+), 2 deletions(-)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index b7970c9544d..f7f36b122d7 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -1,3 +1,9 @@
++2013-08-02  Joern Rennecke <joern.rennecke@embecosm.com>
++
++	* config/epiphany/epiphany.c (epiphany_compute_frame_size):
++	Move call to set_lr_slot_offset after the bulk of current_frame_info
++	member initializations.
++
+ 2013-08-01  Joern Rennecke <joern.rennecke@embecosm.com>
+ 
+ 	* config/epiphany/epiphany.h (FIRST_PSEUDO_REGISTER): Bump up to 79.
+diff --git a/gcc/config/epiphany/epiphany.c b/gcc/config/epiphany/epiphany.c
+index 45d088a9965..25a0d80520e 100644
+--- a/gcc/config/epiphany/epiphany.c
++++ b/gcc/config/epiphany/epiphany.c
+@@ -1303,8 +1303,6 @@ epiphany_compute_frame_size (int size /* # of var. bytes allocated.  */)
+ 	  first_slot_size = 2 * UNITS_PER_WORD;
+ 	  first_slot &= ~1;
+ 	}
+-      if (first_slot == GPR_LR)
+-	set_lr_slot_offset (first_slot_offset);
+     }
+   total_size = first_slot_offset + last_slot_offset;
+ 
+@@ -1321,6 +1319,9 @@ epiphany_compute_frame_size (int size /* # of var. bytes allocated.  */)
+   current_frame_info.first_slot_size	= first_slot_size;
+   current_frame_info.last_slot_offset	= last_slot_offset;
+ 
++  if (first_slot == GPR_LR)
++    set_lr_slot_offset (first_slot_offset);
++
+   /* When pretend args are present, the link / frame pointer can not be
+      conveniently saved at the start of the frame.  For overlay support,
+      we still need the hard frame pointer to point there for non-leaf
+-- 
+2.31.1
+

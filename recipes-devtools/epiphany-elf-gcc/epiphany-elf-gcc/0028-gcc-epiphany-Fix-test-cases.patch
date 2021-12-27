@@ -1,0 +1,100 @@
+From ee9b765c8965d5e4b28168683e9bb6d174cad737 Mon Sep 17 00:00:00 2001
+From: Ola Jeppsson <ola@adapteva.com>
+Date: Fri, 4 Sep 2015 01:30:38 +0200
+Subject: [PATCH 28/33] gcc: epiphany: Fix test cases
+
+gcc:
+	* testsuite/g++.dg/pr49718.C: Add special pattern for
+	Epiphany, mov is split into low and high part.
+	* testsuite/gcc.target/epiphany/interrupt-2.c: Fix function
+	name regex.
+	* testsuite/gcc.target/epiphany/interrupt.c: Likewise.
+	* testsuite/gcc.target/epiphany/pop-1.c (int f): Fix type to
+	avoid warning.
+
+Signed-off-by: Ola Jeppsson <ola@adapteva.com>
+---
+ gcc/ChangeLog.epiphany                          | 10 ++++++++++
+ gcc/testsuite/g++.dg/pr49718.C                  |  4 +++-
+ gcc/testsuite/gcc.target/epiphany/interrupt-2.c |  4 +++-
+ gcc/testsuite/gcc.target/epiphany/interrupt.c   |  2 +-
+ gcc/testsuite/gcc.target/epiphany/pop-1.c       |  2 +-
+ 5 files changed, 18 insertions(+), 4 deletions(-)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index d8050aa7aaf..343f8f6e092 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -1,3 +1,13 @@
++2015-09-04  Ola Jeppsson  <ola@adapteva.com>
++
++	* testsuite/g++.dg/pr49718.C: Add special pattern for
++	Epiphany, mov is split into low and high part.
++	* testsuite/gcc.target/epiphany/interrupt-2.c: Fix function
++	name regex.
++	* testsuite/gcc.target/epiphany/interrupt.c: Likewise.
++	* testsuite/gcc.target/epiphany/pop-1.c (int f): Fix type to
++	avoid warning.
++
+ 2015-09-03  Ola Jeppsson  <ola@adapteva.com>
+ 
+ 	* config/epiphany/epiphany.h: Enable
+diff --git a/gcc/testsuite/g++.dg/pr49718.C b/gcc/testsuite/g++.dg/pr49718.C
+index b1cc5deb7ac..15e50f69632 100644
+--- a/gcc/testsuite/g++.dg/pr49718.C
++++ b/gcc/testsuite/g++.dg/pr49718.C
+@@ -2,8 +2,10 @@
+ /* { dg-options "-O2 -finstrument-functions" } */
+ /* { dg-additional-options "-mno-explicit-relocs" { target alpha*-*-* } } */
+ /* { dg-additional-options "-mno-relax-pic-calls" { target mips*-*-* } } */
+-/* { dg-final { scan-assembler-times "__cyg_profile_func_enter" 1 { target { ! { hppa*-*-hpux* } } } } } */
++/* { dg-final { scan-assembler-times "__cyg_profile_func_enter" 1 { target { ! { hppa*-*-hpux* epiphany-*-* } } } } } */
+ /* { dg-final { scan-assembler-times "__cyg_profile_func_enter,%r" 1 { target hppa*-*-hpux* } } } */
++/* { dg-final { scan-assembler-times "%low\[(\]__cyg_profile_func_enter\[)\]" 1 { target epiphany-*-* } } } */
++/* { dg-final { scan-assembler-times "%high\[(\]__cyg_profile_func_enter\[)\]" 1 { target epiphany-*-* } } } */
+ 
+ #define NOINSTR __attribute__((no_instrument_function))
+ 
+diff --git a/gcc/testsuite/gcc.target/epiphany/interrupt-2.c b/gcc/testsuite/gcc.target/epiphany/interrupt-2.c
+index 4c0de6c5d6c..7880f2cbdee 100644
+--- a/gcc/testsuite/gcc.target/epiphany/interrupt-2.c
++++ b/gcc/testsuite/gcc.target/epiphany/interrupt-2.c
+@@ -1,5 +1,7 @@
+ /* { dg-options "-g" } */
+ 
++extern void *dma0;
++
+ void __attribute__((interrupt))
+ universal_handler (void)
+ {
+@@ -21,4 +23,4 @@ h (void)
+ { /* { dg-warning "is not a string constant" } */
+ }
+ 
+-/* { dg-final { scan-assembler-times "b\[ \t\]*_misc_handler" 4 } } */
++/* { dg-final { scan-assembler-times "b\[ \t\]*\[_\]?misc_handler" 4 } } */
+diff --git a/gcc/testsuite/gcc.target/epiphany/interrupt.c b/gcc/testsuite/gcc.target/epiphany/interrupt.c
+index 86fb255613b..2d6592ebe1c 100644
+--- a/gcc/testsuite/gcc.target/epiphany/interrupt.c
++++ b/gcc/testsuite/gcc.target/epiphany/interrupt.c
+@@ -15,4 +15,4 @@ h (void)
+ { /* { dg-warning "is not a string constant" } */
+ }
+ 
+-/* { dg-final { scan-assembler-times "b\[ \t\]*_dma0_handler" 1 } } */
++/* { dg-final { scan-assembler-times "b\[ \t\]*\[_\]?dma0_handler" 1 } } */
+diff --git a/gcc/testsuite/gcc.target/epiphany/pop-1.c b/gcc/testsuite/gcc.target/epiphany/pop-1.c
+index d82dbed62c9..7d0a3c9c5e8 100644
+--- a/gcc/testsuite/gcc.target/epiphany/pop-1.c
++++ b/gcc/testsuite/gcc.target/epiphany/pop-1.c
+@@ -5,6 +5,6 @@
+ 
+ int f (int i)
+ {
+-  volatile j = i;
++  volatile int j = i;
+   return j;
+ }
+-- 
+2.31.1
+

@@ -1,0 +1,48 @@
+From a2d5797599d6f3a58f47c2cf275a8fc598b87924 Mon Sep 17 00:00:00 2001
+From: Ola Jeppsson <ola@adapteva.com>
+Date: Thu, 3 Sep 2015 22:21:01 +0200
+Subject: [PATCH 27/33] gcc: epiphany: Let assembler generate debug line info
+
+gcc:
+	* config/epiphany/epiphany.h: Enable
+	DWARF2_ASM_LINE_DEBUG_INFO.
+
+Signed-off-by: Ola Jeppsson <ola@adapteva.com>
+---
+ gcc/ChangeLog.epiphany         | 5 +++++
+ gcc/config/epiphany/epiphany.h | 5 +++++
+ 2 files changed, 10 insertions(+)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index cf7f15762e6..d8050aa7aaf 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -1,3 +1,8 @@
++2015-09-03  Ola Jeppsson  <ola@adapteva.com>
++
++	* config/epiphany/epiphany.h: Enable
++	DWARF2_ASM_LINE_DEBUG_INFO.
++
+ 2015-08-29  Ola Jeppsson  <ola@adapteva.com>
+ 
+ 	* config/epiphany/epiphany.c (epiphany_start_function):
+diff --git a/gcc/config/epiphany/epiphany.h b/gcc/config/epiphany/epiphany.h
+index fc84cc40576..6a1e1ba6750 100644
+--- a/gcc/config/epiphany/epiphany.h
++++ b/gcc/config/epiphany/epiphany.h
+@@ -814,7 +814,12 @@ do \
+ 
+ /* Generate DBX and DWARF debugging information.  */
+ #define DBX_DEBUGGING_INFO 1
++#define DWARF2_DEBUGGING_INFO 1
+ 
++/* Let the assembler generate debug line info.  */
++#define DWARF2_ASM_LINE_DEBUG_INFO 1
++
++/* Use DWARF2 debugging info by default.  */
+ #undef PREFERRED_DEBUGGING_TYPE
+ #define PREFERRED_DEBUGGING_TYPE DWARF2_DEBUG
+ 
+-- 
+2.31.1
+

@@ -1,0 +1,100 @@
+From 0fe85efd98462399ee6026035dd535274ab62da1 Mon Sep 17 00:00:00 2001
+From: Ola Jeppsson <ola@adapteva.com>
+Date: Tue, 8 Nov 2016 17:45:00 +0100
+Subject: [PATCH 31/33] epiphany: Add -mno-sched-prolog option.
+
+This flag can be used to generate more predictable prologues, which are
+easier to parse by for example frame unwinding code in the Epiphany GDB
+port. Default is off, i.e., allow scheduling in prologue.
+
+gcc/
+	* config/epiphany/epiphany.md (define_constants)
+	<UNSPECV_BLOCKAGE>: New constant.
+	(blockage): New define_insn.
+	* config/epiphany/epiphany.opt (mno-sched-prolog): New option.
+	Default to allow scheduling in prologue.
+	* config/epiphany/epiphany.c (epiphany_expand_prologue): Emit
+	blockage if TARGET_NO_SCHED_PROLOG is set.
+
+Signed-off-by: Ola Jeppsson <ola@adapteva.com>
+---
+ gcc/ChangeLog.epiphany           | 10 ++++++++++
+ gcc/config/epiphany/epiphany.c   |  3 +++
+ gcc/config/epiphany/epiphany.md  |  9 ++++++++-
+ gcc/config/epiphany/epiphany.opt |  4 ++++
+ 4 files changed, 25 insertions(+), 1 deletion(-)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index f7c252d7b78..563a48f368b 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -1,3 +1,13 @@
++2016-11-08  Ola Jeppsson  <ola@adapteva.com>
++
++	* config/epiphany/epiphany.md (define_constants)
++	<UNSPECV_BLOCKAGE>: New constant.
++	(blockage): New define_insn.
++	* config/epiphany/epiphany.opt (mno-sched-prolog): New option.
++	Default to allow scheduling in prologue.
++	* config/epiphany/epiphany.c (epiphany_expand_prologue): Emit
++	blockage if TARGET_NO_SCHED_PROLOG is set.
++
+ 2016-04-04  Ola Jeppsson  <ola@adapteva.com>
+ 
+ 	* config/epiphany/epiphany.h (CALL_USED_REGISTERS): Make
+diff --git a/gcc/config/epiphany/epiphany.c b/gcc/config/epiphany/epiphany.c
+index 97f3e95d4d3..b6d1f6e6356 100644
+--- a/gcc/config/epiphany/epiphany.c
++++ b/gcc/config/epiphany/epiphany.c
+@@ -1998,6 +1998,9 @@ epiphany_expand_prologue (void)
+       if (note)
+ 	add_reg_note (insn, REG_FRAME_RELATED_EXPR, note);
+     }
++
++  if (TARGET_NO_SCHED_PROLOG)
++    emit_insn (gen_blockage ());
+ }
+ 
+ void
+diff --git a/gcc/config/epiphany/epiphany.md b/gcc/config/epiphany/epiphany.md
+index aae463a18c2..488065cc7dd 100644
+--- a/gcc/config/epiphany/epiphany.md
++++ b/gcc/config/epiphany/epiphany.md
+@@ -53,7 +53,8 @@
+    (UNSPEC_CASESI		 2)
+ 
+    (UNSPECV_GID			 0)
+-   (UNSPECV_GIE			 1)])
++   (UNSPECV_GIE			 1)
++   (UNSPECV_BLOCKAGE		 2)])
+ 
+ ;; Insn type.  Used to default other attribute values.
+ 
+@@ -147,6 +148,12 @@
+     }
+ })
+ 
++(define_insn "blockage"
++  [(unspec_volatile [(const_int 0)] UNSPECV_BLOCKAGE)]
++  ""
++  ""
++  [(set_attr "length" "0")])
++
+ (define_insn "*movqi_insn"
+   [(set (match_operand:QI 0 "move_dest_operand" "=Rcs,   r,  r,r,m")
+ 	(match_operand:QI 1 "move_src_operand"   "Rcs,rU16,Cal,m,r"))]
+diff --git a/gcc/config/epiphany/epiphany.opt b/gcc/config/epiphany/epiphany.opt
+index 549a4a095f5..be686df5fe9 100644
+--- a/gcc/config/epiphany/epiphany.opt
++++ b/gcc/config/epiphany/epiphany.opt
+@@ -150,3 +150,7 @@ Enum(m1reg) String(r63) Value(63)
+ fsoftware-cache
+ Target Mask(SOFT_CACHE)
+ Use software cache
++
++mno-sched-prolog
++Target RejectNegative Report Mask(NO_SCHED_PROLOG)
++Disallow scheduling of a function's prologue sequence.
+-- 
+2.31.1
+

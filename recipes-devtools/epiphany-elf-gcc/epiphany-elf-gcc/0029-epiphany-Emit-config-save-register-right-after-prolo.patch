@@ -1,0 +1,75 @@
+From c238921d64117b26b77308705a5e71b44d32e443 Mon Sep 17 00:00:00 2001
+From: Ola Jeppsson <ola@adapteva.com>
+Date: Mon, 2 Nov 2015 14:36:53 +0100
+Subject: [PATCH 29/33] epiphany: Emit config save register right after
+ prologue
+
+Emit gen_save_config instruction right after the prologue so that the
+save-register is initialized in all blocks of the function.
+
+Problem described further here:
+https://github.com/adapteva/epiphany-sdk/issues/53
+
+Fixes:
+FAIL: gcc.c-torture/execute/struct-ret-1.c   -Os  execution test
+
+gcc/
+	* config/epiphany/epiphany.c (emit_set_fp_mode): If
+	gen_save_config is emitted, insert it right after prologue.
+
+Signed-off-by: Ola Jeppsson <ola@adapteva.com>
+---
+ gcc/ChangeLog.epiphany         |  5 +++++
+ gcc/config/epiphany/epiphany.c | 20 ++++++++++++++++++--
+ 2 files changed, 23 insertions(+), 2 deletions(-)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index 343f8f6e092..c9ec0920c34 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -1,3 +1,8 @@
++2015-11-02  Ola Jeppsson  <ola@adapteva.com>
++
++	* config/epiphany/epiphany.c (emit_set_fp_mode): If
++	gen_save_config is emitted, insert it right after prologue.
++
+ 2015-09-04  Ola Jeppsson  <ola@adapteva.com>
+ 
+ 	* testsuite/g++.dg/pr49718.C: Add special pattern for
+diff --git a/gcc/config/epiphany/epiphany.c b/gcc/config/epiphany/epiphany.c
+index 8145b6775f7..97f3e95d4d3 100644
+--- a/gcc/config/epiphany/epiphany.c
++++ b/gcc/config/epiphany/epiphany.c
+@@ -2731,11 +2731,27 @@ emit_set_fp_mode (int entity, int mode, int prev_mode ATTRIBUTE_UNUSED,
+   else if (entity == EPIPHANY_MSW_ENTITY_CONFIG)
+     {
+       /* Mode switching optimization is done after emit_initial_value_sets,
+-	 so we have to take care of CONFIG_REGNUM here.  */
++	 so we have to take care of CONFIG_REGNUM here.
++	 If we emit 'gen_save_config', insert it right after the prologue so
++	 there never can be an uninitialized load from the save-register.  */
++
++      edge entry_edge;
++      rtx_insn *insn, *seq;
++      rtx save;
++
+       gcc_assert (mode >= 0 && mode <= 2);
+-      rtx save = get_hard_reg_initial_val (SImode, CONFIG_REGNUM);
++
++      start_sequence ();
++      save = get_hard_reg_initial_val (SImode, CONFIG_REGNUM);
+       if (mode == 1)
+ 	emit_insn (gen_save_config (save));
++      seq = get_insns ();
++      end_sequence ();
++
++      entry_edge = single_succ_edge (ENTRY_BLOCK_PTR_FOR_FN (cfun));
++      insert_insn_on_edge (seq, entry_edge);
++      commit_one_edge_insertion (entry_edge);
++
+       return;
+     }
+   fp_mode = (enum attr_fp_mode) mode;
+-- 
+2.31.1
+

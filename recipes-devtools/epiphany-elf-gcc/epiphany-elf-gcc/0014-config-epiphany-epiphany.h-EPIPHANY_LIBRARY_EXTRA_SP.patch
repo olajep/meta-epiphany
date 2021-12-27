@@ -1,0 +1,40 @@
+From 2b94a0c807eb1a6e2c978dfbaa4aa1d1aeb8b9de Mon Sep 17 00:00:00 2001
+From: Pierre Langlois <pierre.langlois@embecosm.com>
+Date: Fri, 30 May 2014 15:51:17 +0100
+Subject: [PATCH 14/33] * config/epiphany/epiphany.h
+ (EPIPHANY_LIBRARY_EXTRA_SPEC): Build libraries with -fpic.
+
+---
+ gcc/ChangeLog.epiphany         | 5 +++++
+ gcc/config/epiphany/epiphany.h | 2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index cb3215caa40..c2d9f059567 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -1,3 +1,8 @@
++2014-05-30  Pierre Langlois  <pierre.langlois@embecosm.com>
++
++	* config/epiphany/epiphany.h (EPIPHANY_LIBRARY_EXTRA_SPEC): Build
++	libraries with -fpic.
++
+ 2014-05-28  Pierre Langlois  <pierre.langlois@embecosm.com>
+ 
+ 	* config/epiphany/epiphany.md (GPR_FP): Change to 11.
+diff --git a/gcc/config/epiphany/epiphany.h b/gcc/config/epiphany/epiphany.h
+index 53eb1202a7e..7f0706047cf 100644
+--- a/gcc/config/epiphany/epiphany.h
++++ b/gcc/config/epiphany/epiphany.h
+@@ -58,7 +58,7 @@ along with GCC; see the file COPYING3.  If not see
+ #define ENDFILE_SPEC "crtend.o%s crtn.o%s"
+ 
+ #define EPIPHANY_LIBRARY_EXTRA_SPEC \
+-  "-ffixed-r40 -ffixed-r41 -ffixed-r42 -ffixed-r43"
++  "-ffixed-r41 -ffixed-r41 -ffixed-r42 -ffixed-r43 -fpic"
+ 
+ /* In the "spec:" rule,, t-epiphany changes this to epiphany_library_stub_spec
+    and epiphany_library_extra_spec, respectively.  */
+-- 
+2.31.1
+

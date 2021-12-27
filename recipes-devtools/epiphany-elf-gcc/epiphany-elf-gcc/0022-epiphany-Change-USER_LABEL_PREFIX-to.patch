@@ -1,0 +1,44 @@
+From 680b72c462eb2d6835cc412b950e881c5f9bfed0 Mon Sep 17 00:00:00 2001
+From: Ola Jeppsson <ola@adapteva.com>
+Date: Thu, 27 Aug 2015 17:26:59 +0200
+Subject: [PATCH 22/33] epiphany: Change USER_LABEL_PREFIX to ""
+
+2015-08-27  Ola Jeppsson  <ola@adapteva.com>
+	* config/epiphany/epiphany.h: Change USER_LABEL_PREFIX
+	from "_" to "". Consistent with binutils and most elf targets.
+
+Signed-off-by: Ola Jeppsson <ola@adapteva.com>
+---
+ gcc/ChangeLog.epiphany         | 5 +++++
+ gcc/config/epiphany/epiphany.h | 2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index e75f10eb91d..c17e2cbc39e 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -1,3 +1,8 @@
++2015-08-27  Ola Jeppsson  <ola@adapteva.com>
++
++	* config/epiphany/epiphany.h: Change USER_LABEL_PREFIX
++	from "_" to "". Consistent with binutils and most elf targets.
++
+ 2015-08-27  Ola Jeppsson  <ola@adapteva.com>
+ 
+ 	* gcc/config/epiphany/epiphany.h: Move "fp" to register 15
+diff --git a/gcc/config/epiphany/epiphany.h b/gcc/config/epiphany/epiphany.h
+index 483108cd5ec..5d0c19de231 100644
+--- a/gcc/config/epiphany/epiphany.h
++++ b/gcc/config/epiphany/epiphany.h
+@@ -72,7 +72,7 @@ along with GCC; see the file COPYING3.  If not see
+ #define DRIVER_SELF_SPECS " %(epiphany_library_extra_spec) "
+ 
+ #undef USER_LABEL_PREFIX
+-#define USER_LABEL_PREFIX "_"
++#define USER_LABEL_PREFIX ""
+ 
+ #define CRT_CALL_STATIC_FUNCTION(SECTION_OP, FUNC) \
+    asm (SECTION_OP "\n\
+-- 
+2.31.1
+

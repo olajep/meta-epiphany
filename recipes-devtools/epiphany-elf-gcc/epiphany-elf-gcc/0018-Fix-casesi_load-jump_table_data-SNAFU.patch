@@ -1,0 +1,41 @@
+From 7dfc9f41b49f8b126f2ef2a31c0287eb8a934cfb Mon Sep 17 00:00:00 2001
+From: Joern Rennecke <joern.rennecke@embecosm.com>
+Date: Fri, 12 Dec 2014 14:39:03 +0000
+Subject: [PATCH 18/33] Fix casesi_load jump_table_data SNAFU.
+
+        * config/epiphany/epiphany.md (casesi_load): Use next_nonnote_insn to
+        find jump_table_data insn.
+---
+ gcc/ChangeLog.epiphany          | 5 +++++
+ gcc/config/epiphany/epiphany.md | 2 +-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/gcc/ChangeLog.epiphany b/gcc/ChangeLog.epiphany
+index d9be8347ba2..ad3144cbc1b 100644
+--- a/gcc/ChangeLog.epiphany
++++ b/gcc/ChangeLog.epiphany
+@@ -1,3 +1,8 @@
++2014-12-12  Joern Rennecke  <joern.rennecke@embecosm.com>
++
++	* config/epiphany/epiphany.md (casesi_load): Use next_nonnote_insn to
++	find jump_table_data insn.
++
+ 2013-10-31  Joern Rennecke <joern.rennecke@embecosm.com>
+ 
+ 	* config/epiphany/epiphany.md (stack_adjust_addfp, stack_adjust_mov):
+diff --git a/gcc/config/epiphany/epiphany.md b/gcc/config/epiphany/epiphany.md
+index 5fe0c0d0474..a992d3c0795 100644
+--- a/gcc/config/epiphany/epiphany.md
++++ b/gcc/config/epiphany/epiphany.md
+@@ -2288,7 +2288,7 @@
+    (clobber (reg:CC CC_REGNUM))]
+   "flag_pic"
+ {
+-  rtx diff_vec = PATTERN (next_real_insn (operands[2]));
++  rtx diff_vec = PATTERN (next_nonnote_insn (operands[2]));
+   gcc_assert (GET_CODE (diff_vec) == ADDR_DIFF_VEC);
+   enum machine_mode mode = GET_MODE (diff_vec);
+   int shift = exact_log2 (GET_MODE_SIZE (mode));
+-- 
+2.31.1
+
