@@ -9,10 +9,20 @@ require epiphany-gcc-shared-source.inc
 
 SLIB = "${S}"
 
-DEPENDS_class-target += "${TARGET_SYS}-${EPIPHANY_LIBC}"
+DEPENDS += "${TARGET_SYS}-${EPIPHANY_LIBC}"
 PROVIDES := "virtual/${TARGET_PREFIX}compilerlibs"
 
-TOOLCHAIN_OPTIONS = " -isystem ${STAGING_DIR_HOST}${prefix}/${TARGET_SYS}/include"
+libdir_append = "/${TARGET_SYS}"
+datadir = "${prefix}/${TARGET_SYS}/share"
+includedir = "${exec_prefix}/${TARGET_SYS}/include"
+
+TOOLCHAIN_OPTIONS = " -isystem ${STAGING_DIR_HOST}${includedir}"
+
+EXTRA_OECONF_PATHS_append = " \
+    --libdir=${libdir} \
+    --datarootdir=${datadir} \
+    --includedir=${includedir} \
+"
 
 # TODO: Move to include or bbclass?
 # Append prefix to package names to avoid collisions with the default target
