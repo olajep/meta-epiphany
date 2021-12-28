@@ -1,7 +1,5 @@
 FILESEXTRAPATHS =. "${COREBASE}/meta/recipes-devtools/gcc:"
 
-DISABLE_STATIC=""
-
 inherit epiphany-library
 require recipes-devtools/gcc/gcc-${PV}.inc
 require recipes-devtools/gcc/gcc-runtime.inc

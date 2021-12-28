@@ -10,9 +10,6 @@ TARGET_CC_ARCH = ""
 TARGET_LD_ARCH = ""
 TARGET_AS_ARCH = ""
 
-EPIPHANY_LIBC ?= "newlib"
-LIBCOVERRIDE = ":libc-${EPIPHANY_LIBC}"
-
 # Disable some sanity checking and variable expansions in
 # cross-canadian.bbclass to work around 'unknown target errors'.
 # We need to make sure we set the correct values here.

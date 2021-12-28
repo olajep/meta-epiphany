@@ -26,9 +26,6 @@ TARGET_AS_ARCH = ""
 TUNE_FEATURES = ""
 TARGET_FPU = ""
 
-EPIPHANY_LIBC ?= "newlib"
-LIBCOVERRIDE = ":libc-${EPIPHANY_LIBC}"
-
 # Include path to host (MACHINE) toolchain
 PATH_prepend = "${STAGING_DIR_NATIVE}${bindir_native}/${HOST_SYS}:"
 
