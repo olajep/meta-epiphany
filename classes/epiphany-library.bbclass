@@ -1,7 +1,18 @@
 inherit epiphany-target
+inherit prepend-target-prefix-to-pn
 
 PACKAGE_ARCH = "${TARGET_ARCH}"
 
-ADJUST_PACKAGENAMES ?= "1"
-
 MULTIMACH_TARGET_SYS="${PACKAGE_ARCH}${TARGET_VENDOR}-${TARGET_OS}"
+
+libdir_append = "/${TARGET_SYS}"
+datadir = "${prefix}/${TARGET_SYS}/share"
+includedir = "${exec_prefix}/${TARGET_SYS}/include"
+
+TOOLCHAIN_OPTIONS = " -isystem ${STAGING_DIR_HOST}${includedir}"
+
+EXTRA_OECONF_PATHS_append = " \
+    --libdir=${libdir} \
+    --datarootdir=${datadir} \
+    --includedir=${includedir} \
+"
