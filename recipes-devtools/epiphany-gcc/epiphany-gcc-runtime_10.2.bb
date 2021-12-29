@@ -7,5 +7,5 @@ require epiphany-gcc-shared-source.inc
 
 SLIB = "${S}"
 
-DEPENDS += "${TARGET_SYS}-${EPIPHANY_LIBC}"
+DEPENDS += "virtual/epiphany-libc"
 PROVIDES := "virtual/${TARGET_PREFIX}compilerlibs"
