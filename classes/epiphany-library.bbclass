@@ -17,3 +17,5 @@ TOOLCHAIN_OPTIONS = " -isystem ${STAGING_DIR_HOST}${includedir} --sysroot=${STAG
 LDFLAGS_append = " --sysroot=${STAGING_DIR_HOST}${sysroot}"
 
 SYSROOT_DIRS_append = " ${host_exec_prefix}/${TARGET_SYS}"
+
+BASE_DEFAULT_DEPS_append= " ${TARGET_ARCH}-libgloss virtual/${TARGET_PREFIX}compilerlibs ${TARGET_ARCH}-libgcc"
