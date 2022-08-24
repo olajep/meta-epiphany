@@ -3,16 +3,17 @@ inherit prepend-target-prefix-to-pn
 
 PACKAGE_ARCH = "${TARGET_ARCH}"
 
-MULTIMACH_TARGET_SYS="${PACKAGE_ARCH}${TARGET_VENDOR}-${TARGET_OS}"
+MULTIMACH_TARGET_SYS = "${PACKAGE_ARCH}${TARGET_VENDOR}-${TARGET_OS}"
 
-libdir = "${exec_prefix}/lib/${TARGET_SYS}"
-datadir = "${prefix}/${TARGET_SYS}/share"
-includedir = "${exec_prefix}/${TARGET_SYS}/include"
+host_prefix := "${prefix}"
+host_exec_prefix := "${exec_prefix}"
 
-TOOLCHAIN_OPTIONS = " -isystem ${STAGING_DIR_HOST}${includedir}"
+sysroot="${host_prefix}/${TARGET_SYS}/sys-root"
+export prefix = "${sysroot}"
 
-EXTRA_OECONF_PATHS_append = " \
-    --libdir=${libdir} \
-    --datarootdir=${datadir} \
-    --includedir=${includedir} \
-"
+# TODO: Shouldn't need the -isystem?
+TOOLCHAIN_OPTIONS = " -isystem ${STAGING_DIR_HOST}${includedir} --sysroot=${STAGING_DIR_HOST}${sysroot}"
+#TOOLCHAIN_OPTIONS = " --sysroot=${STAGING_DIR_HOST}${sysroot}"
+LDFLAGS_append = " --sysroot=${STAGING_DIR_HOST}${sysroot}"
+
+SYSROOT_DIRS_append = " ${host_exec_prefix}/${TARGET_SYS}"
