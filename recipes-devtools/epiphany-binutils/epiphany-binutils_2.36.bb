@@ -16,7 +16,7 @@ EXTRA_OECONF += " \
     ${DISABLE_SHARED} \
 "
 
-target_prefix="${prefix}/${TARGET_SYS}/include"
+target_prefix="${prefix}/${TARGET_SYS}"
 
 do_install () {
     autotools_do_install
@@ -42,16 +42,10 @@ do_install () {
 
     rm -rf ${D}${prefix}/${HOST_SYS}
 
-    install -d ${D}${target_prefix}/include
-    for f in ansidecl.h symcat.h; do
-        cp ${D}${includedir}/${TARGET_SYS}/$f ${D}${target_prefix}/include
-    done
-
     # bfd_stdint.h encodes the compiler name in the header
     sed -i ${D}${prefix}/include/${TARGET_SYS}/bfd_stdint.h -e "s,${TARGET_PREFIX},,"
 }
 
 USE_ALTERNATIVES_FOR = ""
 
-FILES_${PN}-dev += "${target_prefix}/include"
 FILES_${PN}-staticdev += "${libdir}/${TARGET_SYS}"
