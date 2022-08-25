@@ -9,6 +9,6 @@ SLIB = "${S}"
 
 BBCLASSEXTEND:remove = "nativesdk"
 
-DEPENDS = "virtual/${TARGET_PREFIX}gcc virtual/${TARGET_ARCH}-libc"
+DEPENDS = " virtual/${TARGET_PREFIX}gcc ${TARGET_ARCH}-libgloss ${TARGET_ARCH}-libgcc"
 
 PROVIDES = "virtual/${TARGET_PREFIX}compilerlibs"

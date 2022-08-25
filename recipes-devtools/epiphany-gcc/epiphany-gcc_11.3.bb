@@ -12,7 +12,7 @@ BBCLASSEXTEND = "nativesdk"
 RDEPENDS:${PN}:remove = "cpp"
 RDEPENDS:${PN} = "${TARGET_ARCH}-cpp"
 
-DEPENDS += "virtual/${TARGET_ARCH}-libc virtual/${HOST_PREFIX}gcc"
+DEPENDS += "virtual/${TARGET_ARCH}-libc virtual/${HOST_PREFIX}gcc gcc-cross-${TARGET_ARCH}"
 
 # These symlink packages should only be installed for the main GCC arch
 PACKAGES:remove = " \
@@ -33,4 +33,8 @@ do_install:append () {
     done
     rm ${D}${base_libdir}/cpp
     rmdir ${D}${base_libdir}
+
+    # Remove symlink to fix conflict with main GCC arch
+    rm ${D}${libdir}/bfd-plugins/liblto_plugin.so
+    rmdir ${D}${libdir}/bfd-plugins
 }

@@ -11,6 +11,6 @@ STAMP = "${STAMPS_DIR}/work-shared/epiphany-gcc-${PV}-${PR}"
 STAMPCLEAN = "${STAMPS_DIR}/work-shared/epiphany-gcc-${PV}-*"
 
 EXCLUDE_FROM_WORLD = "1"
-
-BASEURI="git://github.com/olajep/epiphany-gcc.git;branch=epiphany-gcc-10.2.0;protocol=https"
-SRCREV = "6760f82ba0e8bae0c44a007cc0666bfe76a3fcb7"
+BRANCH = "epiphany-gcc-11.3.0"
+BASEURI="git://github.com/olajep/epiphany-gcc.git;branch=${BRANCH};protocol=https"
+SRCREV = "ec0be0e86f0ef8d33eccdf6748523ef7d2d59d91"
