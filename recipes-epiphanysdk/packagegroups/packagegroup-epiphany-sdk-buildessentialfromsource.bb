@@ -8,5 +8,7 @@ inherit packagegroup
 
 RDEPENDS_packagegroup-epiphany-sdk-buildessentialfromsource = "\
     epiphany-sdk \
+    epiphany-sdk-dev \
+    epiphany-elib-dev \
+    epiphany-elib-staticdev \
     "
-
