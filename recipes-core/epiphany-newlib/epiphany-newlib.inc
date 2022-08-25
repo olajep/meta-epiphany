@@ -1,7 +1,8 @@
 require recipes-core/newlib/newlib.inc
 
-SRC_URI = "git://github.com/olajep/epiphany-newlib.git;branch=epiphany-newlib-4.1.0;protocol=https"
-SRCREV = "d0fb2c27cb8f28cce2f5c76acfc24951c45268e4"
+BRANCH = "epiphany-newlib-snapshot-20211231"
+SRC_URI = "git://github.com/olajep/epiphany-newlib.git;branch=${BRANCH};protocol=https"
+SRCREV = "0ef40c0a0d6961710dfc6ad003eebcfafdaba17d"
 
 S = "${WORKDIR}/git"
 
