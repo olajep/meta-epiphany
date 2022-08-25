@@ -29,7 +29,7 @@ TUNE_FEATURES = ""
 TARGET_FPU = ""
 
 # Include path to host (MACHINE) toolchain
-PATH_prepend = "${STAGING_DIR_NATIVE}${bindir_native}/${HOST_SYS}:"
+PATH:prepend = "${STAGING_DIR_NATIVE}${bindir_native}/${HOST_SYS}:"
 
 # Disable some sanity checking and variable expansions in
 # cross-canadian.bbclass to work around 'unknown target errors'.

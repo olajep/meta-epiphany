@@ -1,7 +1,7 @@
 
 
 ## add in the epiphany-sdk component
-RDEPENDS_${PN} += "\
+RDEPENDS:${PN} += "\
     nativesdk-epiphany-sdk \
 "
 

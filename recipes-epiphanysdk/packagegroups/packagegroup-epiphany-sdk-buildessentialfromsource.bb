@@ -6,7 +6,7 @@ LICENSE = "GPL"
 
 inherit packagegroup
 
-RDEPENDS_packagegroup-epiphany-sdk-buildessentialfromsource = "\
+RDEPENDS:packagegroup-epiphany-sdk-buildessentialfromsource = "\
     epiphany-sdk \
     epiphany-sdk-dev \
     epiphany-elib-dev \

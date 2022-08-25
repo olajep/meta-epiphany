@@ -9,13 +9,13 @@ require epiphany-gcc-shared-source.inc
 
 BBCLASSEXTEND = "nativesdk"
 
-RDEPENDS_${PN}_remove = "cpp"
-RDEPENDS_${PN} = "${TARGET_ARCH}-cpp"
+RDEPENDS:${PN}:remove = "cpp"
+RDEPENDS:${PN} = "${TARGET_ARCH}-cpp"
 
 DEPENDS += "virtual/${TARGET_ARCH}-libc virtual/${HOST_PREFIX}gcc"
 
 # These symlink packages should only be installed for the main GCC arch
-PACKAGES_remove = " \
+PACKAGES:remove = " \
     ${PN}-symlinks \
     ${TARGET_ARCH}-g++-symlinks \
     ${TARGET_ARCH}-cpp-symlinks \
@@ -24,7 +24,7 @@ PACKAGES_remove = " \
     ${TARGET_ARCH}-gcov-symlinks \
 "
 
-do_install_append () {
+do_install:append () {
     # Remove symlinks we don't want
     for i in g77 f77 gfortran f95 g++ gcc cpp gcov gcov-tool c++ cc; do
         if [ -e ${D}${bindir}/$i -o -h ${D}${bindir}/$i ]; then

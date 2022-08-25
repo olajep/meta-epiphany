@@ -11,11 +11,11 @@ BRANCH = "2019.1"
 SRCREV = "0710d8afbd352c9c1dac7cb1617346f738561c86"
 SRC_URI = " git://github.com/adapteva/epiphany-libs.git;branch=${BRANCH}"
 
-ALLOW_EMPTY_${PN} = "1"
+ALLOW_EMPTY:${PN} = "1"
 
 S = "${WORKDIR}/git/e-lib"
 
-do_configure_prepend () {
+do_configure:prepend () {
     pushd ${S}
     ./bootstrap
     popd

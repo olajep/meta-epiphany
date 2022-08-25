@@ -7,7 +7,7 @@ require epiphany-gcc-shared-source.inc
 
 SLIB = "${S}"
 
-BBCLASSEXTEND_remove = "nativesdk"
+BBCLASSEXTEND:remove = "nativesdk"
 
 DEPENDS = "virtual/${TARGET_PREFIX}gcc virtual/${TARGET_ARCH}-libc"
 

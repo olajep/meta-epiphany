@@ -16,7 +16,7 @@ PACKAGES = "\
     ${PN} \
 "
 
-FILES_${PN} += " \
+FILES:${PN} += " \
     ${prefix}/epiphany-elf/lib/*.a \
     ${prefix}/lib/epiphany-elf \
 "
@@ -27,7 +27,7 @@ INHIBIT_PACKAGE_STRIP = "1"
 INHIBIT_SYSROOT_STRIP = "1"
 
 ## Only need to provide libxx.so files for building in the sdk so ignore dependancies
-SKIP_FILEDEPS_${PN} = "1"
+SKIP_FILEDEPS:${PN} = "1"
 
 do_configure () {
 }

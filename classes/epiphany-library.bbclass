@@ -14,8 +14,8 @@ export prefix = "${sysroot}"
 # TODO: Shouldn't need the -isystem?
 TOOLCHAIN_OPTIONS = " -isystem ${STAGING_DIR_HOST}${includedir} --sysroot=${STAGING_DIR_HOST}${sysroot}"
 #TOOLCHAIN_OPTIONS = " --sysroot=${STAGING_DIR_HOST}${sysroot}"
-LDFLAGS_append = " --sysroot=${STAGING_DIR_HOST}${sysroot}"
+LDFLAGS:append = " --sysroot=${STAGING_DIR_HOST}${sysroot}"
 
-SYSROOT_DIRS_append = " ${host_exec_prefix}/${TARGET_SYS}"
+SYSROOT_DIRS:append = " ${host_exec_prefix}/${TARGET_SYS}"
 
-BASE_DEFAULT_DEPS_append= " ${TARGET_ARCH}-libgloss virtual/${TARGET_PREFIX}compilerlibs ${TARGET_ARCH}-libgcc"
+BASE_DEFAULT_DEPS:append= " ${TARGET_ARCH}-libgloss virtual/${TARGET_PREFIX}compilerlibs ${TARGET_ARCH}-libgcc"

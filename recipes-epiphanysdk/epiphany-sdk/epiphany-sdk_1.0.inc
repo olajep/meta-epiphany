@@ -15,9 +15,9 @@ S = "${WORKDIR}/git"
 # The target library is built separately
 EXTRA_OECONF = "--disable-elib"
 
-FILES_${PN} += "${datadir}/epiphany"
+FILES:${PN} += "${datadir}/epiphany"
 
-do_configure_prepend () {
+do_configure:prepend () {
     pushd ${S}
     ./bootstrap
     popd

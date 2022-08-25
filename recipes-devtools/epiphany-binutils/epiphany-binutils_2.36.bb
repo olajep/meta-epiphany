@@ -48,4 +48,4 @@ do_install () {
 
 USE_ALTERNATIVES_FOR = ""
 
-FILES_${PN}-staticdev += "${libdir}/${TARGET_SYS}"
+FILES:${PN}-staticdev += "${libdir}/${TARGET_SYS}"

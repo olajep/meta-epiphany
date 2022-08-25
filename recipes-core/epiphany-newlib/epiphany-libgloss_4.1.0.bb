@@ -8,7 +8,7 @@ do_configure() {
     ${S}/libgloss/configure ${EXTRA_OECONF} --prefix=${prefix}
 }
 
-do_install_append() {
+do_install:append() {
     # Move libs to default directories so they can be picked up later
     install -d ${D}${libdir}
     mv -v ${D}${prefix}/${TARGET_SYS}/lib/* ${D}${libdir}
@@ -18,7 +18,7 @@ do_install_append() {
 }
 
 # Split packages correctly
-FILES_${PN} += "${libdir}/*.ld ${libdir}/*.specs"
+FILES:${PN} += "${libdir}/*.ld ${libdir}/*.specs"
 
 INHIBIT_PACKAGE_STRIP = "1"
 INHIBIT_PACKAGE_DEBUG_SPLIT = "1"

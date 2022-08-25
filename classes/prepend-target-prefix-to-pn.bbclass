@@ -14,8 +14,8 @@ python () {
         else:
             new_name = target_arch + "-" + orig_name
         new_packages.append(new_name)
-        files = d.getVar("FILES_" + orig_name) or ""
-        d.delVar("FILES_" + orig_name)
-        d.setVar("FILES_" + new_name, files)
+        files = d.getVar("FILES:" + orig_name) or ""
+        d.delVar("FILES:" + orig_name)
+        d.setVar("FILES:" + new_name, files)
     d.setVar("PACKAGES", " ".join(new_packages))
 }

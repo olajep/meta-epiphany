@@ -6,7 +6,7 @@ LICENSE = "GPL"
 
 inherit packagegroup
 
-RDEPENDS_packagegroup-epiphany-elf-buildessentialfromsource = "\
+RDEPENDS:packagegroup-epiphany-elf-buildessentialfromsource = "\
     autoconf \
     automake \
     epiphany-binutils \
