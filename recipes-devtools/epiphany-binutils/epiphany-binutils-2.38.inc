@@ -1,3 +1,3 @@
-BRANCH = "epiphany-binutils-2.36"
+BRANCH = "epiphany-binutils-2.38"
 BINUTILS_GIT_URI = "git://github.com/olajep/epiphany-binutils-gdb.git;branch=${BRANCH};protocol=https"
-SRCREV="311b054d6522f8ed0cc29e7f304aaf7743b21b1e"
+SRCREV="38137706964c93732a4e9ed6d039d6d719e859b0"

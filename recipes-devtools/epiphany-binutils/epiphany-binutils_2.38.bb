@@ -1,8 +1,8 @@
 FILESEXTRAPATHS =. "${COREBASE}/meta/recipes-devtools/binutils/binutils:"
 
 inherit epiphany-cross-for-machine
-require epiphany-binutils-2.36.inc
-require recipes-devtools/binutils/binutils_2.36.bb
+require epiphany-binutils-${PV}.inc
+require recipes-devtools/binutils/binutils_${PV}.bb
 
 # TODO: The epiphany toolchain has a different libbfd.so and libopcodes.so
 # Per target libraries seem to be separated by path so we could do dynamic but
@@ -41,9 +41,6 @@ do_install () {
     mv ${D}${prefix}/${HOST_SYS}/${TARGET_SYS}/lib ${D}${libdir}/${TARGET_SYS}
 
     rm -rf ${D}${prefix}/${HOST_SYS}
-
-    # bfd_stdint.h encodes the compiler name in the header
-    sed -i ${D}${prefix}/include/${TARGET_SYS}/bfd_stdint.h -e "s,${TARGET_PREFIX},,"
 }
 
 USE_ALTERNATIVES_FOR = ""
